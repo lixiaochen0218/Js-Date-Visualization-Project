@@ -6,8 +6,8 @@ import * as d3 from "d3";
 
 var Stomp = require('stompjs');
 var stompClient = require('stompjs');
-var sockjs = require('sockjs');
-
+//var sockjs = require('sockjs');
+var SockJS = require('sockjs-client/dist/sockjs.js');
 
 class GraphBox extends React.Component{
     
@@ -24,6 +24,13 @@ class GraphBox extends React.Component{
     
         componentDidMount() {
             console.log("G2 DidMount")
+            // this.connection = new WebSocket('ws://localhost:8080/app/topic/greetings/')
+
+            // this.connection.onmessage = evt => { 
+                
+            //     console.log(evt)
+            //     console.log(evt.data)
+            //   };
         }
     
         
@@ -35,12 +42,14 @@ class GraphBox extends React.Component{
             
                 console.log('Connected: ' + frame);
                 stompClient.subscribe('/topic/greetings', function (message) {
-                    var arr=message.body
+                    var arr=message.body.replace("/\/", "");
                     var date = arr.slice(2,8);  
-                    this.data = arr.slice(11,arr.length-2);
+                    var data = arr.slice(11,arr.length-2);
+                    //console.log(message)
                     console.log(date)
-                    console.log(this.data)
-                    this.printGraph();
+                    console.log(data)
+                    // this.printGraph(data);
+                    
                 });
             });
         }
@@ -73,15 +82,15 @@ class GraphBox extends React.Component{
             ];
             this.data=airlines;
             console.log(this.data)
-            this.printGraph();
+            this.printGraph(airlines);
         }
 
-        printGraph(){
+        printGraph(data){
             var sss = $('g');
             console.log(sss);
             $('g').remove();
             
-            var data = this.data;
+            //var data = this.data;
             var svg = d3.select("svg"),
             margin = {top: 20, right: 20, bottom: 30, left: 40},
             width = +svg.attr("width") - margin.left - margin.right,
@@ -94,7 +103,7 @@ class GraphBox extends React.Component{
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
             
             
-            console.log(data);
+            //console.log(data);
             x.domain(data.map(function(d) { return d.letter; }));
             y.domain([0, d3.max(data, function(d) { return d.frequency; })]);
             
@@ -129,7 +138,8 @@ class GraphBox extends React.Component{
             return (
                 <div className="graphBox">
                 <svg width="960" height="500"></svg>
-                <RaisedButton label="changeData"  onClick={this.getJson.bind(this)}/>
+                <RaisedButton label="getjson"  onClick={this.getJson.bind(this)}/>
+                <RaisedButton label="changeData"  onClick={this.changeData.bind(this)}/>
               {/* <Graph2 data={this.state.data}/>       */}
                 
               </div>
