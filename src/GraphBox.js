@@ -4,6 +4,11 @@ import RaisedButton from 'material-ui/RaisedButton';
 import $ from 'jquery';
 import * as d3 from "d3";
 
+var Stomp = require('stompjs');
+var stompClient = require('stompjs');
+var sockjs = require('sockjs');
+
+
 class GraphBox extends React.Component{
     
     
@@ -11,7 +16,8 @@ class GraphBox extends React.Component{
             super(props)
            
             this.data=[];
-            this.getRequest();
+            //this.getJson();
+            //this.getRequest();
             //setInterval(() => this.getRequest(), 5000);
             
         }
@@ -22,7 +28,22 @@ class GraphBox extends React.Component{
     
         
     
-        
+        getJson(){
+            var socket = new SockJS('http://localhost:8080/gs-guide-websocket');
+            stompClient = Stomp.over(socket);
+            stompClient.connect({}, function (frame) {
+            
+                console.log('Connected: ' + frame);
+                stompClient.subscribe('/topic/greetings', function (message) {
+                    var arr=message.body
+                    var date = arr.slice(2,8);  
+                    this.data = arr.slice(11,arr.length-2);
+                    console.log(date)
+                    console.log(this.data)
+                    this.printGraph();
+                });
+            });
+        }
     
         getRequest(){
             $.ajax({
@@ -108,7 +129,7 @@ class GraphBox extends React.Component{
             return (
                 <div className="graphBox">
                 <svg width="960" height="500"></svg>
-                <RaisedButton label="changeData"  onClick={this.changeData.bind(this)}/>
+                <RaisedButton label="changeData"  onClick={this.getJson.bind(this)}/>
               {/* <Graph2 data={this.state.data}/>       */}
                 
               </div>
