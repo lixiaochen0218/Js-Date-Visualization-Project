@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 //import Graph from './Graph';
-import Graph2 from './Graph2';
+//import Graph2 from './Graph2';
 import GraphBox from './GraphBox';
 import FileUpload from './FileUpload';
 import './App.css';

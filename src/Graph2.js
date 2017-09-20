@@ -1,18 +1,12 @@
 import React from 'react';
-import RaisedButton from 'material-ui/RaisedButton';
+//import RaisedButton from 'material-ui/RaisedButton';
 import * as d3 from "d3";
-import $ from 'jquery';
+//import $ from 'jquery';
 
 class Graph2 extends React.Component{
 
 
-    constructor(props){
-        super(props)
-        //this.d=this.props.data;
-        //console.log(this.d);
-        //this.printGraph();
-        
-    }
+   
 
     
 

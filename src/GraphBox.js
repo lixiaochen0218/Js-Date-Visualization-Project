@@ -1,5 +1,5 @@
 import React from 'react';
-import Graph2 from './Graph2';
+//import Graph2 from './Graph2';
 import RaisedButton from 'material-ui/RaisedButton';
 import $ from 'jquery';
 import * as d3 from "d3";
@@ -38,17 +38,22 @@ class GraphBox extends React.Component{
         getJson(){
             var socket = new SockJS('http://localhost:8080/gs-guide-websocket');
             stompClient = Stomp.over(socket);
+            var gg=this
             stompClient.connect({}, function (frame) {
             
                 console.log('Connected: ' + frame);
                 stompClient.subscribe('/topic/greetings', function (message) {
-                    var arr=message.body.replace("/\/", "");
-                    var date = arr.slice(2,8);  
-                    var data = arr.slice(11,arr.length-2);
-                    //console.log(message)
-                    console.log(date)
-                    console.log(data)
-                    // this.printGraph(data);
+                    
+                    var messageBody= $.parseJSON(message.body);
+                    console.log(messageBody)
+
+                    console.log(messageBody.date)
+                    console.log(messageBody.data)
+                    
+                    
+                    var data=JSON.parse(messageBody.data);
+                    gg.printGraph(data);
+
                     
                 });
             });
@@ -71,17 +76,19 @@ class GraphBox extends React.Component{
             });
         }
 
+        //test graph with some data
         changeData(){
             var airlines=[
-                {"letter":"AF",
-                 "frequency":"0.9853"
+                {"IATACode":"AF",
+                 "PassengerCount":"0.9853"
                 },
-                {"letter":"AI",
-                 "frequency":"0.5872"
+                {"IATACode":"AI",
+                 "PassengerCount":"0.5872"
                 }
             ];
-            this.data=airlines;
-            console.log(this.data)
+           var sss= JSON.stringify(airlines);
+           console.log(sss)
+            console.log(airlines)
             this.printGraph(airlines);
         }
 
@@ -104,8 +111,8 @@ class GraphBox extends React.Component{
             
             
             //console.log(data);
-            x.domain(data.map(function(d) { return d.letter; }));
-            y.domain([0, d3.max(data, function(d) { return d.frequency; })]);
+            x.domain(data.map(function(d) { return d.IATACode; }));
+            y.domain([0, d3.max(data, function(d) { return d.PassengerCount; })]);
             
             g.append("g")
                 .attr("class", "axis axis--x")
@@ -117,19 +124,19 @@ class GraphBox extends React.Component{
                 .call(d3.axisLeft(y).ticks(10, ""))
                 .append("text")
                 .attr("transform", "rotate(-90)")
-                .attr("y", 6)
-                .attr("dy", "1.71em")
-                .attr("text-anchor", "end")
+                //.attr("y", 6)
+                //.attr("dy", "1.71em")
+                //.attr("text-anchor", "end")
                 .text("Frequency");
             
             g.selectAll(".bar")
                 .data(data)
                 .enter().append("rect")
                 .attr("class", "bar")
-                .attr("x", function(d) { return x(d.letter); })
-                .attr("y", function(d) { return y(d.frequency); })
+                .attr("x", function(d) { return x(d.IATACode); })
+                .attr("y", function(d) { return y(d.PassengerCount); })
                 .attr("width", x.bandwidth())
-                .attr("height", function(d) { return height - y(d.frequency); });
+                .attr("height", function(d) { return height - y(d.PassengerCount); });
             
         }
         
