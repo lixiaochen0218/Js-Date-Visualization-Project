@@ -1,13 +1,25 @@
 import React from 'react';
-//import Graph2 from './Graph2';
+
 import RaisedButton from 'material-ui/RaisedButton';
+import Snackbar from 'material-ui/Snackbar';
+
 import $ from 'jquery';
 import * as d3 from "d3";
 
+import AppBarExample from './AppBarExample'
+import DateDialog from './DateDialog';
+
+
+
+
 var Stomp = require('stompjs');
 var stompClient = require('stompjs');
-//var sockjs = require('sockjs');
 var SockJS = require('sockjs-client/dist/sockjs.js');
+
+const style = {
+    margin: 12,
+};
+
 
 class GraphBox extends React.Component{
     
@@ -17,56 +29,82 @@ class GraphBox extends React.Component{
            
             this.data=[];
             this.stompC = null;
-            //this.getJson();
-            //this.getRequest();
+            this.state={
+                snackbar:false,
+                snackbarMessage:"",
+                connect:false,
+                disconnect:true,
+                example:false,
+                date:""
+            }
+
             //setInterval(() => this.getRequest(), 5000);
             
         }
+
+      
+
+        
     
         componentDidMount() {
             console.log("G2 DidMount")
-            // this.connection = new WebSocket('ws://localhost:8080/app/topic/greetings/')
+            
+        }
 
-            // this.connection.onmessage = evt => { 
-                
-            //     console.log(evt)
-            //     console.log(evt.data)
-            //   };
+        componentWillUnmonut(){
+            this.disconnect();
+            //alert("unmount")
         }
     
         
     
         connect(){
-            var gg=this
+            this.handleOpenSnackbar("connecting with WebSocket");
+            //store this
+            var ghostThis=this
+            
             var socket = new SockJS('http://localhost:8080/gs-guide-websocket');
             stompClient = Stomp.over(socket);
             this.stompC=stompClient;
             stompClient.connect({}, function (frame) {
             
-                console.log('Connected: ' + frame);
+                //console.log('Connected: ' + frame);
                 stompClient.subscribe('/topic/greetings', function (message) {
                     
                     var messageBody= $.parseJSON(message.body);
-                    console.log(messageBody)
-
-                    console.log(messageBody.date)
-                    console.log(messageBody.data)
-                    
-                    
+                    // console.log(messageBody)
+                    // console.log(messageBody.date)
+                    // console.log(messageBody.data)
+                
                     var data=JSON.parse(messageBody.data);
-                    gg.printGraph(data);
+                    
+                    //check if user pause the update
+                    if(ghostThis.state.date===messageBody.date){
+                        return;
+                    }
+
+                    ghostThis.printGraph(data);
+                    ghostThis.setState({date:messageBody.date});
 
                     
                 });
             });
+
+            //make connect and example button disabled
+            this.setState({connect:true,disconnect:false,example:true});
         }
 
         disconnect(){
             if (this.stompC !== null) {
                 this.stompC.disconnect();
+                //make connect and example button abled
+                this.setState({connect:false,disconnect:true,example:false});
+                console.log("Disconnected");
+                this.handleOpenSnackbar("Disconnected with WebSocket");
+                return;
             }
+            console.log("Disconnect error");
             
-            console.log("Disconnected");
         }
     
         getRequest(){
@@ -87,33 +125,49 @@ class GraphBox extends React.Component{
         }
 
         //test graph with some data
-        changeData(){
+        exampleData(){
             var airlines=[
-                {"IATACode":"AF",
-                 "PassengerCount":"9835"
-                },
-                {"IATACode":"AI",
-                 "PassengerCount":"5872"
-                }
+                {"IATACode":"AF","PassengerCount":9835},
+                {"IATACode":"AI","PassengerCount":5872},
+                {"IATACode":"CA","PassengerCount":8021},
+                {"IATACode":"AF","PassengerCount":9972},
+                {"IATACode":"AI","PassengerCount":13045},
+                {"IATACode":"NZ","PassengerCount":9438},
+                {"IATACode":"AS","PassengerCount":5638},
+                {"IATACode":"NH","PassengerCount":16706},
+                {"IATACode":"AA","PassengerCount":6455},
+                {"IATACode":"OZ","PassengerCount":7514},
+                {"IATACode":"BA","PassengerCount":9434},
             ];
-           var sss= JSON.stringify(airlines);
-           console.log(sss)
+           //var sss= JSON.stringify(airlines);
+           this.disconnect();
             console.log(airlines)
             this.printGraph(airlines);
+            this.handleOpenSnackbar("Example Airline data");
+        }
+
+        changeDate(){
+           
+            console.log("change date")
+            this.stompC.send("/app/hello", {}, "201701");
         }
 
         printGraph(data){
+
+            //delete old graph
             var sss = $('g');
-            console.log(sss);
-            $('g').remove();
+            if(sss){
+                $('g').remove();
+            }
+            
             
             //var data = this.data;
-            var svg = d3.select("svg"),
+            var svg = d3.select("#svg"),
             margin = {top: 20, right: 20, bottom: 30, left: 40},
             width = +svg.attr("width") - margin.left - margin.right,
             height = +svg.attr("height") - margin.top - margin.bottom;
            
-            width = width +100;
+            width = width +200;
             
 
             var x = d3.scaleBand().rangeRound([0, width]).padding(0.1),
@@ -152,17 +206,64 @@ class GraphBox extends React.Component{
                 .attr("height", function(d) { return height - y(d.PassengerCount); });
             
         }
+
+        handleDialogSubmit = (date) => {
+            if(this.stompC==null){
+                this.handleOpenSnackbar("no connection");
+                return;
+            }
+            if(date==="start"){
+                this.stompC.send("/app/hello", {}, "start");
+                this.handleOpenSnackbar("restart update data");
+            }else if(date.length===6){
+                this.stompC.send("/app/hello", {}, date);
+                console.log("dialog: "+date);
+                this.handleOpenSnackbar("changing to "+date);
+            }else{
+                this.stompC.send("/app/hello", {}, "start");
+                this.handleOpenSnackbar("restart update data");
+            }
+        }
+
+        handleOpenSnackbar = (m) =>{
+            this.setState({snackbar:true});
+            this.setState({snackbarMessage:m});
+        }
+
+        handleRequestCloseSnackbar = () =>{
+            this.setState({snackbar:false});
+        }
         
         
         render() {
             return (
                 <div className="graphBox">
-                <svg width="1060" height="500"></svg>
-                <br />
-                <RaisedButton label="connect"  onClick={this.connect.bind(this)}/>
-                <RaisedButton label="disconnect"  onClick={this.disconnect.bind(this)}/>
-                <RaisedButton label="example"  onClick={this.changeData.bind(this)}/>
-              {/* <Graph2 data={this.state.data}/>       */}
+                <AppBarExample />
+                <div display="inline-block">
+                <RaisedButton label="connect" disabled={this.state.connect} style={style} primary={true} onClick={this.connect.bind(this)}/>
+                <RaisedButton label="disconnect" disabled={this.state.disconnect} style={style} secondary={true} onClick={this.disconnect.bind(this)}/>    
+                <RaisedButton label="example" disabled={this.state.example} style={style} primary={true} onClick={this.exampleData.bind(this)}/>
+                <RaisedButton label="file upload" style={style} href={"http://localhost:3000/file"} primary={false}/>
+                </div>
+
+                {/* <TextField
+                    hintText={"Change the date in here... "+this.state.date}
+                    style={styleTextField}
+                />
+                <RaisedButton label="change date" disabled={this.state.disconnect} style={style} primary={true} onClick={this.changeDate.bind(this)}/> */}
+                <h2 style={style}>{this.state.date}</h2>
+                <svg id="svg" width="1160" height="500"></svg>
+
+                <div display="inline-block">
+                <DateDialog data={this.state.date} ifdisable={this.state.disconnect} onDialogSubmit={this.handleDialogSubmit}/>
+                </div>
+                
+                <Snackbar
+                open={this.state.snackbar}
+                message={this.state.snackbarMessage}
+                autoHideDuration={3000}
+                onRequestClose={this.handleRequestCloseSnackbar}
+                />
                 
               </div>
             );

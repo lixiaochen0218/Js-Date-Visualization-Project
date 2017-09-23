@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
-//import Graph from './Graph';
-//import Graph2 from './Graph2';
+import { Router, Route, browserHistory } from 'react-router'
 import GraphBox from './GraphBox';
 import FileUpload from './FileUpload';
 import './App.css';
@@ -13,15 +12,16 @@ class App extends Component {
 
   render() {
     return (
-      <MuiThemeProvider>
       <div>
-        <FileUpload/>
-        {/* <Graph/> */}
-        {/* <Graph2 /> */}
-        <GraphBox url="/data1.json"/>
-      </div>
+      <MuiThemeProvider>
+        <Router history={browserHistory}>
+          <Route path="/" component={GraphBox}/>
+          <Route path="/graph" component={GraphBox}/>
+          <Route path="/file" component={FileUpload}/>
+        </Router>
+
       </MuiThemeProvider>
-      
+      </div> 
       
     );
   }

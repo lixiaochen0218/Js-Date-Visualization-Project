@@ -17,13 +17,10 @@
 }
 
 .bar {
-  fill: steelblue;
+  fill: #00BCD4;
 }
 
 .bar:hover {
-  fill: brown;
+  fill: #FF4081;
 }
 
-.axis--x path {
-  display: none;
-}
