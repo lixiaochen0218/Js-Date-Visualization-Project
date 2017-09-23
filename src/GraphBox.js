@@ -16,6 +16,7 @@ class GraphBox extends React.Component{
             super(props)
            
             this.data=[];
+            this.stompC = null;
             //this.getJson();
             //this.getRequest();
             //setInterval(() => this.getRequest(), 5000);
@@ -35,10 +36,11 @@ class GraphBox extends React.Component{
     
         
     
-        getJson(){
+        connect(){
+            var gg=this
             var socket = new SockJS('http://localhost:8080/gs-guide-websocket');
             stompClient = Stomp.over(socket);
-            var gg=this
+            this.stompC=stompClient;
             stompClient.connect({}, function (frame) {
             
                 console.log('Connected: ' + frame);
@@ -57,6 +59,14 @@ class GraphBox extends React.Component{
                     
                 });
             });
+        }
+
+        disconnect(){
+            if (this.stompC !== null) {
+                this.stompC.disconnect();
+            }
+            
+            console.log("Disconnected");
         }
     
         getRequest(){
@@ -80,10 +90,10 @@ class GraphBox extends React.Component{
         changeData(){
             var airlines=[
                 {"IATACode":"AF",
-                 "PassengerCount":"0.9853"
+                 "PassengerCount":"9835"
                 },
                 {"IATACode":"AI",
-                 "PassengerCount":"0.5872"
+                 "PassengerCount":"5872"
                 }
             ];
            var sss= JSON.stringify(airlines);
@@ -102,7 +112,10 @@ class GraphBox extends React.Component{
             margin = {top: 20, right: 20, bottom: 30, left: 40},
             width = +svg.attr("width") - margin.left - margin.right,
             height = +svg.attr("height") - margin.top - margin.bottom;
-        
+           
+            width = width +100;
+            
+
             var x = d3.scaleBand().rangeRound([0, width]).padding(0.1),
                 y = d3.scaleLinear().rangeRound([height, 0]);
             
@@ -121,7 +134,7 @@ class GraphBox extends React.Component{
             
             g.append("g")
                 .attr("class", "axis axis--y")
-                .call(d3.axisLeft(y).ticks(10, ""))
+                .call(d3.axisLeft(y).ticks(10))
                 .append("text")
                 .attr("transform", "rotate(-90)")
                 //.attr("y", 6)
@@ -144,9 +157,11 @@ class GraphBox extends React.Component{
         render() {
             return (
                 <div className="graphBox">
-                <svg width="960" height="500"></svg>
-                <RaisedButton label="getjson"  onClick={this.getJson.bind(this)}/>
-                <RaisedButton label="changeData"  onClick={this.changeData.bind(this)}/>
+                <svg width="1060" height="500"></svg>
+                <br />
+                <RaisedButton label="connect"  onClick={this.connect.bind(this)}/>
+                <RaisedButton label="disconnect"  onClick={this.disconnect.bind(this)}/>
+                <RaisedButton label="example"  onClick={this.changeData.bind(this)}/>
               {/* <Graph2 data={this.state.data}/>       */}
                 
               </div>
