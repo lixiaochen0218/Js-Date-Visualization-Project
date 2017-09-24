@@ -20,7 +20,7 @@ const styles = {
  */
 const AppBarExample = () => (
   <AppBar
-    title={<span style={styles.title}>Data Visualization</span>}
+    title={<span style={styles.title}>San Francisco Airport Report (Passenger count / Airline company)</span>}
     onTitleTouchTap={handleTouchTap}
     iconElementLeft={<IconButton tooltip="SVG Icon">
       <ActionHome />
